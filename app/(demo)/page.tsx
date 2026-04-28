@@ -199,10 +199,10 @@ export default function AppForgePage() {
                   ["Consistency", `${result.meta.consistency_report.cross_layer_checks.filter(c => c.passed).length}/${result.meta.consistency_report.cross_layer_checks.length} passed`],
                   ["SQL executed", result.execution_proof?.sql.success ? `✓ ${result.execution_proof.sql.tables_created.length} tables` : "✗ failed"],
                   ["TS valid", result.execution_proof?.typescript.valid ? `✓ ${result.execution_proof.typescript.interface_count} interfaces` : "✗ issues found"],
-                ].map(([l, v]) => (
+                ].map(([l, v]: [string, unknown]) => (
                   <div key={String(l)} style={{ display: "flex", justifyContent: "space-between", marginBottom: 3 }}>
-                    <span style={{ fontSize: 10, color: "#64748b" }}>{l}</span>
-                    <span style={{ fontSize: 10, color: "#94a3b8", fontWeight: 500 }}>{v}</span>
+                    <span style={{ fontSize: 10, color: "#64748b" }}>{String(l)}</span>
+                    <span style={{ fontSize: 10, color: "#94a3b8", fontWeight: 500 }}>{String(v)}</span>
                   </div>
                 ))}
               </div>
@@ -272,10 +272,10 @@ export default function AppForgePage() {
                         ["Auth Roles", ((config.auth as Record<string,unknown>)?.roles as unknown[])?.length],
                         ["Data Models", ((config.architecture as Record<string,unknown>)?.data_models as unknown[])?.length],
                         ["Confidence", `${Math.round(((config.intent as Record<string,unknown>)?.confidence as number ?? 0) * 100)}%`],
-                      ].map(([l, v]) => (
+                      ].map(([l, v]: [string, unknown]) => (
                         <div key={String(l)} style={{ background: "#0f172a", border: "1px solid #1e293b", borderRadius: 7, padding: "10px 12px" }}>
-                          <div style={{ fontSize: 9, color: "#64748b", marginBottom: 3, textTransform: "uppercase", letterSpacing: "0.05em" }}>{l}</div>
-                          <div style={{ fontSize: 18, fontWeight: 700, color: "#e2e8f0" }}>{v}</div>
+                          <div style={{ fontSize: 9, color: "#64748b", marginBottom: 3, textTransform: "uppercase", letterSpacing: "0.05em" }}>{String(l)}</div>
+                          <div style={{ fontSize: 18, fontWeight: 700, color: "#e2e8f0" }}>{String(v)}</div>
                         </div>
                       ))}
                     </div>
