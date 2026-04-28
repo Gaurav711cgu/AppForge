@@ -1,0 +1,8 @@
+* { box-sizing: border-box; }
+body { margin: 0; padding: 0; background: #0f1117; }
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #2d3748; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #4a5568; }
+::selection { background: #6366f133; color: #e2e8f0; }
+textarea:focus { outline: none; border-color: #6366f1 !important; }
