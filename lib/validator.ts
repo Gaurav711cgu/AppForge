@@ -1,7 +1,5 @@
 // ================================================================
 // VALIDATOR — Cross-Layer Consistency Engine
-// Checks that DB ↔ API ↔ UI ↔ Auth are all consistent
-// This is the "linker" step of our compiler
 // ================================================================
 
 import type {
@@ -19,17 +17,22 @@ export function validateCrossLayer(
   const issues: ValidationIssue[] = [];
   const checks: ValidationReport["cross_layer_checks"] = [];
 
-  // ── CHECK 1: Every DB table has at least one API endpoint ────────
+  // CHECK 1
   const dbTableNames = new Set(db.tables.map(t => t.name.toLowerCase()));
   const apiEndpointPaths = api.endpoints.map(e => e.path.toLowerCase());
 
   for (const table of db.tables) {
-    const hasEndpoint = apiEndpointPaths.some(p => p.includes(table.name.toLowerCase().replace("_", "-")) || p.includes(table.name.toLowerCase()));
+    const hasEndpoint = apiEndpointPaths.some(p =>
+      p.includes(table.name.toLowerCase().replace("_", "-")) ||
+      p.includes(table.name.toLowerCase())
+    );
+
     checks.push({
       check: `DB table '${table.name}' has API coverage`,
       passed: hasEndpoint || ["users", "sessions", "refresh_tokens"].includes(table.name.toLowerCase()),
       detail: hasEndpoint ? undefined : `No API endpoint found for table '${table.name}'`,
     });
+
     if (!hasEndpoint && !["users", "sessions", "refresh_tokens"].includes(table.name.toLowerCase())) {
       issues.push({
         layer: "cross",
@@ -41,17 +44,21 @@ export function validateCrossLayer(
     }
   }
 
-  // ── CHECK 2: API request bodies reference valid DB columns ───────
+  // CHECK 2
   for (const endpoint of api.endpoints) {
     if (!endpoint.request_body) continue;
+
     const resourceName = endpoint.path.split("/").filter(Boolean)[0]?.replace("-", "_");
     const table = db.tables.find(t => t.name.toLowerCase() === resourceName?.toLowerCase());
 
     if (table) {
       const tableColumns = new Set(table.columns.map(c => c.name.toLowerCase()));
+
       for (const [field] of Object.entries(endpoint.request_body)) {
         if (["password", "confirm_password", "token", "code"].includes(field)) continue;
+
         const fieldMatches = tableColumns.has(field.toLowerCase());
+
         if (!fieldMatches) {
           issues.push({
             layer: "cross",
@@ -63,6 +70,7 @@ export function validateCrossLayer(
           });
         }
       }
+
       checks.push({
         check: `API ${endpoint.method} ${endpoint.path} fields match DB schema`,
         passed: true,
@@ -70,15 +78,18 @@ export function validateCrossLayer(
     }
   }
 
-  // ── CHECK 3: UI data_sources reference real API endpoints ────────
+  // CHECK 3
   const apiPathSet = new Set(api.endpoints.map(e => e.path.toLowerCase()));
 
   for (const page of ui.pages) {
     for (const component of page.components) {
       if (component.data_source) {
         const source = component.data_source.toLowerCase().replace(/^\/api/, "");
-        const hasMatch = apiPathSet.has(source) || apiPathSet.has(`/${source}`) ||
-          [...apiPathSet].some(p => p.includes(source.split("/")[0]));
+
+        const hasMatch =
+          apiPathSet.has(source) ||
+          apiPathSet.has(`/${source}`) ||
+          Array.from(apiPathSet).some(p => p.includes(source.split("/")[0]));
 
         checks.push({
           check: `UI component '${component.id}' on '${page.name}' data_source maps to API`,
@@ -92,24 +103,26 @@ export function validateCrossLayer(
             severity: "warning",
             code: "UI_DATASOURCE_NOT_IN_API",
             message: `UI component data_source '${component.data_source}' doesn't match any API endpoint`,
-            fix_suggestion: `Use one of: ${[...apiPathSet].slice(0, 3).join(", ")}`,
+            fix_suggestion: `Use one of: ${Array.from(apiPathSet).slice(0, 3).join(", ")}`,
           });
         }
       }
     }
   }
 
-  // ── CHECK 4: Auth roles are consistent across all layers ─────────
+  // CHECK 4
   const authRoleNames = new Set(auth.roles.map(r => r.name.toLowerCase()));
-  const intentRoles = new Set(arch.user_flows.map(f => f.actor.toLowerCase()));
 
   for (const flow of arch.user_flows) {
-    const hasAuthRole = authRoleNames.has(flow.actor.toLowerCase()) ||
-      [...authRoleNames].some(r => flow.actor.toLowerCase().includes(r));
+    const hasAuthRole =
+      authRoleNames.has(flow.actor.toLowerCase()) ||
+      Array.from(authRoleNames).some(r => flow.actor.toLowerCase().includes(r));
+
     checks.push({
       check: `User flow actor '${flow.actor}' has auth role`,
       passed: hasAuthRole,
     });
+
     if (!hasAuthRole) {
       issues.push({
         layer: "cross",
@@ -121,7 +134,7 @@ export function validateCrossLayer(
     }
   }
 
-  // ── CHECK 5: API auth-required endpoints have auth roles ─────────
+  // CHECK 5
   for (const endpoint of api.endpoints) {
     if (endpoint.auth_required && endpoint.roles.length === 0) {
       issues.push({
@@ -133,20 +146,23 @@ export function validateCrossLayer(
       });
     }
   }
+
   checks.push({
     check: "All auth-required endpoints have roles defined",
     passed: !issues.some(i => i.code === "API_AUTH_REQUIRED_NO_ROLES"),
   });
 
-  // ── CHECK 6: DB FK references point to real tables ───────────────
+  // CHECK 6
   for (const table of db.tables) {
     for (const col of table.columns) {
       if (col.references) {
         const refExists = dbTableNames.has(col.references.table.toLowerCase());
+
         checks.push({
           check: `FK ${table.name}.${col.name} → ${col.references.table} exists`,
           passed: refExists,
         });
+
         if (!refExists) {
           issues.push({
             layer: "db",
@@ -160,13 +176,17 @@ export function validateCrossLayer(
     }
   }
 
-  // ── CHECK 7: UI forms have matching API POST/PUT endpoints ────────
+  // CHECK 7
   for (const page of ui.pages) {
     for (const component of page.components) {
       if (component.type === "Form" && component.actions) {
         const submitAction = component.actions.find(a => a.type === "submit");
+
         if (submitAction?.target) {
-          const targetExists = [...apiPathSet].some(p => p.includes(submitAction.target!.toLowerCase().split("?")[0]));
+          const targetExists = Array.from(apiPathSet).some(p =>
+            p.includes(submitAction.target!.toLowerCase().split("?")[0])
+          );
+
           checks.push({
             check: `Form on '${page.name}' submit target '${submitAction.target}' exists in API`,
             passed: targetExists,
