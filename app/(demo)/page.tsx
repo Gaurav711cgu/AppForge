@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState } from "react";
 
 type StageStatus = "waiting" | "running" | "done" | "failed";
 type TabId = "config" | "runtime" | "execution" | "consistency" | "meta";
@@ -120,7 +120,6 @@ export default function AppForgePage() {
 
   return (
     <div style={{ minHeight: "100vh", background: "#0f1117", color: "#e2e8f0", fontFamily: "'Inter', system-ui, sans-serif" }}>
-      {/* Header */}
       <header style={{ borderBottom: "1px solid #1e2530", padding: "14px 28px", display: "flex", alignItems: "center", gap: 12 }}>
         <div style={{ width: 30, height: 30, background: "linear-gradient(135deg, #6366f1, #8b5cf6)", borderRadius: 7, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 15 }}>⚡</div>
         <div>
@@ -135,12 +134,12 @@ export default function AppForgePage() {
       </header>
 
       <div style={{ display: "flex", height: "calc(100vh - 61px)" }}>
-        {/* LEFT — Input + Pipeline */}
+        {/* LEFT */}
         <div style={{ width: 370, borderRight: "1px solid #1e2530", display: "flex", flexDirection: "column", flexShrink: 0 }}>
           <div style={{ padding: 18, borderBottom: "1px solid #1e2530" }}>
             <label style={{ fontSize: 11, color: "#94a3b8", display: "block", marginBottom: 6, fontWeight: 500, letterSpacing: "0.05em" }}>DESCRIBE YOUR APPLICATION</label>
             <textarea value={prompt} onChange={e => setPrompt(e.target.value)}
-              placeholder="Build a CRM with login, contacts, dashboard, role-based access, and premium plan with payments. Admins can see analytics."
+              placeholder="Build a CRM with login, contacts, dashboard, role-based access, and premium plan with payments."
               style={{ width: "100%", height: 100, background: "#1a1f2e", border: "1px solid #2d3748", borderRadius: 8, padding: "10px 12px", color: "#e2e8f0", fontSize: 12, resize: "none", outline: "none", lineHeight: 1.6, boxSizing: "border-box" }}
               onKeyDown={e => { if (e.key === "Enter" && e.metaKey) runPipeline(); }}
             />
@@ -158,7 +157,6 @@ export default function AppForgePage() {
             </div>
           </div>
 
-          {/* Pipeline stages */}
           <div style={{ flex: 1, overflowY: "auto", padding: 14 }}>
             <div style={{ fontSize: 10, color: "#64748b", marginBottom: 10, fontWeight: 500, letterSpacing: "0.07em" }}>COMPILER PIPELINE</div>
             {stages.map(stage => (
@@ -188,36 +186,38 @@ export default function AppForgePage() {
               </div>
             ))}
 
-            {/* Metrics */}
-            {result?.meta && (
-              <div style={{ marginTop: 12, padding: "10px 12px", borderRadius: 8, background: "#0f172a", border: "1px solid #1e293b" }}>
-                <div style={{ fontSize: 10, color: "#64748b", marginBottom: 6, fontWeight: 500 }}>RUN METRICS</div>
-                {[
-                  ["Tokens", result.meta.total_tokens.toLocaleString()],
-                  ["Latency", `${(result.meta.total_latency_ms / 1000).toFixed(1)}s`],
-                  ["Retries", result.meta.total_retries],
-                  ["Consistency", `${result.meta.consistency_report.cross_layer_checks.filter(c => c.passed).length}/${result.meta.consistency_report.cross_layer_checks.length} passed`],
-                  ["SQL executed", result.execution_proof?.sql.success ? `✓ ${result.execution_proof.sql.tables_created.length} tables` : "✗ failed"],
-                  ["TS valid", result.execution_proof?.typescript.valid ? `✓ ${result.execution_proof.typescript.interface_count} interfaces` : "✗ issues found"],
-                ].map(([l, v]: [string, unknown]) => (
-                  <div key={String(l)} style={{ display: "flex", justifyContent: "space-between", marginBottom: 3 }}>
-                    <span style={{ fontSize: 10, color: "#64748b" }}>{String(l)}</span>
-                    <span style={{ fontSize: 10, color: "#94a3b8", fontWeight: 500 }}>{String(v)}</span>
-                  </div>
-                ))}
-              </div>
-            )}
+            {result?.meta && (() => {
+              const metrics = [
+                ["Tokens", result.meta!.total_tokens.toLocaleString()],
+                ["Latency", `${(result.meta!.total_latency_ms / 1000).toFixed(1)}s`],
+                ["Retries", String(result.meta!.total_retries)],
+                ["Checks", `${result.meta!.consistency_report.cross_layer_checks.filter(c => c.passed).length}/${result.meta!.consistency_report.cross_layer_checks.length} passed`],
+                ["SQL", result.execution_proof?.sql.success ? `✓ ${result.execution_proof.sql.tables_created.length} tables` : "✗ failed"],
+                ["TS", result.execution_proof?.typescript.valid ? `✓ ${result.execution_proof.typescript.interface_count} ifaces` : "✗ issues"],
+              ];
+              return (
+                <div style={{ marginTop: 12, padding: "10px 12px", borderRadius: 8, background: "#0f172a", border: "1px solid #1e293b" }}>
+                  <div style={{ fontSize: 10, color: "#64748b", marginBottom: 6, fontWeight: 500 }}>RUN METRICS</div>
+                  {metrics.map(row => (
+                    <div key={row[0]} style={{ display: "flex", justifyContent: "space-between", marginBottom: 3 }}>
+                      <span style={{ fontSize: 10, color: "#64748b" }}>{row[0]}</span>
+                      <span style={{ fontSize: 10, color: "#94a3b8", fontWeight: 500 }}>{row[1]}</span>
+                    </div>
+                  ))}
+                </div>
+              );
+            })()}
           </div>
         </div>
 
-        {/* RIGHT — Output */}
+        {/* RIGHT */}
         <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
           {!result ? (
             <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", color: "#334155" }}>
               <div style={{ fontSize: 44, marginBottom: 14 }}>⚡</div>
               <div style={{ fontSize: 15, fontWeight: 600, marginBottom: 8, color: "#475569" }}>Ready to compile</div>
               <div style={{ fontSize: 12, textAlign: "center", maxWidth: 380, lineHeight: 1.7, color: "#334155" }}>
-                Describe your application. The compiler runs 4 stages, validates all schemas, repairs inconsistencies, executes the SQL, and generates working code.
+                Describe your application. The compiler runs 4 stages, validates all schemas, repairs inconsistencies, executes SQL, and generates working code.
               </div>
             </div>
           ) : !result.success ? (
@@ -247,7 +247,6 @@ export default function AppForgePage() {
             </div>
           ) : (
             <>
-              {/* Tabs */}
               <div style={{ display: "flex", borderBottom: "1px solid #1e2530", padding: "0 18px", flexShrink: 0 }}>
                 {TABS.map(tab => (
                   <button key={tab.id} onClick={() => setActiveTab(tab.id)}
@@ -260,31 +259,34 @@ export default function AppForgePage() {
               <div style={{ flex: 1, overflow: "auto" }}>
 
                 {/* CONFIG */}
-                {activeTab === "config" && config && (
-                  <div style={{ padding: 18 }}>
-                    <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10, marginBottom: 16 }}>
-                      {[
-                        ["App Name", (config.intent as Record<string,unknown>)?.app_name],
-                        ["Type", (config.intent as Record<string,unknown>)?.app_type],
-                        ["DB Tables", ((config.db as Record<string,unknown>)?.tables as unknown[])?.length],
-                        ["API Endpoints", ((config.api as Record<string,unknown>)?.endpoints as unknown[])?.length],
-                        ["UI Pages", ((config.ui as Record<string,unknown>)?.pages as unknown[])?.length],
-                        ["Auth Roles", ((config.auth as Record<string,unknown>)?.roles as unknown[])?.length],
-                        ["Data Models", ((config.architecture as Record<string,unknown>)?.data_models as unknown[])?.length],
-                        ["Confidence", `${Math.round(((config.intent as Record<string,unknown>)?.confidence as number ?? 0) * 100)}%`],
-                      ].map(([l, v]: [string, unknown]) => (
-                        <div key={String(l)} style={{ background: "#0f172a", border: "1px solid #1e293b", borderRadius: 7, padding: "10px 12px" }}>
-                          <div style={{ fontSize: 9, color: "#64748b", marginBottom: 3, textTransform: "uppercase", letterSpacing: "0.05em" }}>{String(l)}</div>
-                          <div style={{ fontSize: 18, fontWeight: 700, color: "#e2e8f0" }}>{String(v)}</div>
-                        </div>
-                      ))}
+                {activeTab === "config" && config && (() => {
+                  const cards = [
+                    ["App Name", String((config.intent as Record<string,unknown>)?.app_name ?? "")],
+                    ["Type",     String((config.intent as Record<string,unknown>)?.app_type ?? "")],
+                    ["DB Tables", String(((config.db as Record<string,unknown>)?.tables as unknown[])?.length ?? 0)],
+                    ["API Endpoints", String(((config.api as Record<string,unknown>)?.endpoints as unknown[])?.length ?? 0)],
+                    ["UI Pages", String(((config.ui as Record<string,unknown>)?.pages as unknown[])?.length ?? 0)],
+                    ["Auth Roles", String(((config.auth as Record<string,unknown>)?.roles as unknown[])?.length ?? 0)],
+                    ["Data Models", String(((config.architecture as Record<string,unknown>)?.data_models as unknown[])?.length ?? 0)],
+                    ["Confidence", `${Math.round(((config.intent as Record<string,unknown>)?.confidence as number ?? 0) * 100)}%`],
+                  ];
+                  return (
+                    <div style={{ padding: 18 }}>
+                      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10, marginBottom: 16 }}>
+                        {cards.map(row => (
+                          <div key={row[0]} style={{ background: "#0f172a", border: "1px solid #1e293b", borderRadius: 7, padding: "10px 12px" }}>
+                            <div style={{ fontSize: 9, color: "#64748b", marginBottom: 3, textTransform: "uppercase", letterSpacing: "0.05em" }}>{row[0]}</div>
+                            <div style={{ fontSize: 18, fontWeight: 700, color: "#e2e8f0" }}>{row[1]}</div>
+                          </div>
+                        ))}
+                      </div>
+                      <div style={{ background: "#0a0f1a", border: "1px solid #1e293b", borderRadius: 8, padding: 14 }}>
+                        <div style={{ fontSize: 10, color: "#64748b", marginBottom: 6, fontWeight: 500 }}>FULL APP CONFIG JSON</div>
+                        <pre style={{ fontSize: 11, color: "#94a3b8", overflow: "auto", maxHeight: 480, lineHeight: 1.6, margin: 0 }}>{JSON.stringify(config, null, 2)}</pre>
+                      </div>
                     </div>
-                    <div style={{ background: "#0a0f1a", border: "1px solid #1e293b", borderRadius: 8, padding: 14 }}>
-                      <div style={{ fontSize: 10, color: "#64748b", marginBottom: 6, fontWeight: 500 }}>FULL APP CONFIG JSON</div>
-                      <pre style={{ fontSize: 11, color: "#94a3b8", overflow: "auto", maxHeight: 480, lineHeight: 1.6, margin: 0 }}>{JSON.stringify(config, null, 2)}</pre>
-                    </div>
-                  </div>
-                )}
+                  );
+                })()}
 
                 {/* EXECUTION PROOF */}
                 {activeTab === "execution" && result.execution_proof && (
@@ -293,18 +295,15 @@ export default function AppForgePage() {
                       <div style={{ fontSize: 13, fontWeight: 600, color: sql?.success ? "#4ade80" : "#f87171", marginBottom: 4 }}>
                         {sql?.success ? "✓ SQL Execution Successful" : "✗ SQL Execution Failed"}
                       </div>
-                      <div style={{ fontSize: 11, color: "#64748b" }}>Engine: {sql?.engine} · Executed in {sql?.execution_time_ms}ms</div>
+                      <div style={{ fontSize: 11, color: "#64748b" }}>Engine: {sql?.engine} · {sql?.execution_time_ms}ms</div>
                     </div>
-
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 14 }}>
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
                       <div style={{ background: "#0f172a", border: "1px solid #1e293b", borderRadius: 8, padding: 14 }}>
                         <div style={{ fontSize: 11, color: "#64748b", marginBottom: 8, fontWeight: 500 }}>TABLES CREATED ({sql?.tables_created.length})</div>
                         {sql?.tables_created.map(t => (
                           <div key={t} style={{ display: "flex", justifyContent: "space-between", padding: "5px 0", borderBottom: "1px solid #1e293b" }}>
                             <span style={{ fontSize: 12, color: "#86efac" }}>✓ {t}</span>
-                            <span style={{ fontSize: 11, color: "#64748b" }}>
-                              {sql.row_count_checks.find(r => r.table === t)?.count ?? 0} rows
-                            </span>
+                            <span style={{ fontSize: 11, color: "#64748b" }}>{sql.row_count_checks.find(r => r.table === t)?.count ?? 0} rows</span>
                           </div>
                         ))}
                         {sql?.tables_failed.map(f => (
@@ -317,29 +316,18 @@ export default function AppForgePage() {
                       <div style={{ background: "#0f172a", border: "1px solid #1e293b", borderRadius: 8, padding: 14 }}>
                         <div style={{ fontSize: 11, color: "#64748b", marginBottom: 8, fontWeight: 500 }}>VALIDATION CHECKS</div>
                         {[
-                          ["INSERT test", sql?.insert_test_passed ? "✓ Passed" : "✗ Failed", sql?.insert_test_passed],
-                          ["TypeScript types", ts?.valid ? `✓ ${ts.interface_count} interfaces valid` : "✗ Issues found", ts?.valid],
-                          ["SQL syntax", sql?.success ? "✓ All statements ran" : "✗ Errors found", sql?.success],
-                        ].map(([label, value, ok]) => (
-                          <div key={String(label)} style={{ display: "flex", justifyContent: "space-between", padding: "6px 0", borderBottom: "1px solid #1e293b" }}>
-                            <span style={{ fontSize: 12, color: "#94a3b8" }}>{label}</span>
-                            <span style={{ fontSize: 12, color: ok ? "#4ade80" : "#f87171" }}>{value}</span>
+                          { label: "INSERT test", value: sql?.insert_test_passed ? "✓ Passed" : "✗ Failed", ok: sql?.insert_test_passed },
+                          { label: "TypeScript types", value: ts?.valid ? `✓ ${ts.interface_count} interfaces` : "✗ Issues found", ok: ts?.valid },
+                          { label: "SQL syntax", value: sql?.success ? "✓ All statements ran" : "✗ Errors found", ok: sql?.success },
+                        ].map(item => (
+                          <div key={item.label} style={{ display: "flex", justifyContent: "space-between", padding: "6px 0", borderBottom: "1px solid #1e293b" }}>
+                            <span style={{ fontSize: 12, color: "#94a3b8" }}>{item.label}</span>
+                            <span style={{ fontSize: 12, color: item.ok ? "#4ade80" : "#f87171" }}>{item.value}</span>
                           </div>
                         ))}
-                        {ts?.issues && ts.issues.length > 0 && (
-                          <div style={{ marginTop: 8 }}>
-                            {ts.issues.map((issue, i) => (
-                              <div key={i} style={{ fontSize: 10, color: "#f59e0b", marginTop: 3 }}>⚠ {issue}</div>
-                            ))}
-                          </div>
-                        )}
-                        {sql?.errors && sql.errors.length > 0 && (
-                          <div style={{ marginTop: 8 }}>
-                            {sql.errors.map((err, i) => (
-                              <div key={i} style={{ fontSize: 10, color: "#f87171", marginTop: 3 }}>✗ {err}</div>
-                            ))}
-                          </div>
-                        )}
+                        {sql?.errors && sql.errors.length > 0 && sql.errors.map((err, i) => (
+                          <div key={i} style={{ fontSize: 10, color: "#f87171", marginTop: 3 }}>✗ {err}</div>
+                        ))}
                       </div>
                     </div>
                   </div>
