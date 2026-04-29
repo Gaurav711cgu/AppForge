@@ -1,7 +1,23 @@
 import { NextRequest, NextResponse } from "next/server";
 import { runPipeline } from "@/lib/pipeline";
-import { generateRuntimeCode, validateGeneratedCode } from "@/lib/runtime";
+import { generateRuntimeCode } from "@/lib/runtime";
 import { executeGeneratedSQL, validateTypeScriptOutput } from "@/lib/sql-executor";
+
+// Inlined here to avoid export resolution issues with template-string exports in runtime.ts
+function validateGeneratedCode(files: Record<string, string>): { valid: boolean; errors: string[] } {
+  const errors: string[] = [];
+  for (const [filePath, content] of Object.entries(files)) {
+    if (filePath.endsWith(".ts") || filePath.endsWith(".tsx")) {
+      const open = (content.match(/\{/g) ?? []).length;
+      const close = (content.match(/\}/g) ?? []).length;
+      if (Math.abs(open - close) > 2) errors.push(`${filePath}: Unbalanced braces`);
+    }
+    if (filePath.endsWith(".sql") && !content.includes("CREATE TABLE") && !content.includes("create table")) {
+      errors.push(`${filePath}: Missing CREATE TABLE`);
+    }
+  }
+  return { valid: errors.length === 0, errors };
+}
 
 export async function POST(req: NextRequest) {
   try {
