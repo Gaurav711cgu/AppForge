@@ -45,7 +45,7 @@ export async function runPipeline(userPrompt: string): Promise<PipelineResult> {
   const intent = intentResult.data;
 
   // Detect vague input early
-  if (intent.confidence < 0.4 && intent.clarifications_needed.length > 3) {
+  if (intent.confidence < 0.25 && intent.clarifications_needed.length > 5) {
     return {
       run_id: runId,
       success: false,
