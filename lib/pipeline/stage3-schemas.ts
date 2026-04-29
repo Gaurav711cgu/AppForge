@@ -7,18 +7,19 @@ import {
   type DBSchema, type APISchema, type UISchema, type AuthSchema,
   type Intent, type Architecture, type StageResult
 } from "@/types";
-import { llm, BASE_OPTIONS } from "@/lib/llm-client";
+import { llm, BASE_OPTIONS, FAST_OPTIONS, JSON_REMINDER } from "@/lib/llm-client";
 
 async function callLLM(systemPrompt: string, userContent: string, maxTokens = 3000): Promise<string> {
   const res = await llm.chat.completions.create({
     ...BASE_OPTIONS,
     messages: [
-      { role: "system", content: systemPrompt },
+      { role: "system", content: systemPrompt + JSON_REMINDER },
       { role: "user", content: userContent },
     ],
     max_tokens: maxTokens,
   });
-  return res.choices[0].message.content ?? "{}";
+  const raw = res.choices[0].message.content ?? "{}";
+  return raw.replace(/^```(?:json)?\n?/i, "").replace(/\n?```$/i, "").trim();
 }
 
 // ── DB SCHEMA ────────────────────────────────────────────────────
