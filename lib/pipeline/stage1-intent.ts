@@ -1,38 +1,33 @@
-// ================================================================
-// STAGE 1: INTENT EXTRACTION (Lexer + Parser)
-// ================================================================
-
 import { IntentSchema, type Intent, type StageResult } from "@/types";
-import { llm, BASE_OPTIONS } from "@/lib/llm-client";
+import { llm, BASE_OPTIONS, JSON_REMINDER } from "@/lib/llm-client";
 
 const SYSTEM_PROMPT = `You are the INTENT EXTRACTION stage of an AI application compiler.
 
-Your role: Parse a user's natural language description of an app into a precise, structured intermediate representation.
+Your role: Parse a user's natural language description of an app into a structured intermediate representation.
 
 Rules:
-1. NEVER generate UI, API, or DB schemas here — that is a later stage
+1. NEVER generate UI, API, or DB schemas here
 2. Extract ONLY what is explicitly stated or strongly implied
-3. For vague inputs: list them in clarifications_needed AND make reasonable assumptions
-4. For conflicting requirements: flag them in clarifications_needed
+3. For vague inputs: list in clarifications_needed AND make reasonable assumptions
+4. For conflicting requirements: flag in clarifications_needed
 5. Set confidence = 0.0 to 1.0 based on how complete the spec is
-6. Identify ALL user roles — even implicit ones (e.g. "users" implies an authenticated user role)
+6. Identify ALL user roles — even implicit ones
 7. List every page/screen implied by the features
+8. For a well-described app (like a CRM with specific features), confidence should be 0.7+
 
-Output ONLY valid JSON matching the exact schema. No markdown, no explanation.
-
-Schema:
+Output ONLY valid JSON matching this schema:
 {
-  app_name: string,
-  app_type: "crm"|"ecommerce"|"saas"|"dashboard"|"marketplace"|"social"|"productivity"|"education"|"healthcare"|"custom",
-  description: string,
-  core_entities: Array<{ name: string, description: string, attributes: string[] }>,
-  features: Array<{ name: string, description: string, priority: "must"|"should"|"could" }>,
-  roles: Array<{ name: string, description: string, permissions: string[] }>,
-  pages: string[],
-  integrations: string[],
-  assumptions: string[],
-  clarifications_needed: string[],
-  confidence: number
+  "app_name": string,
+  "app_type": "crm"|"ecommerce"|"saas"|"dashboard"|"marketplace"|"social"|"productivity"|"education"|"healthcare"|"custom",
+  "description": string,
+  "core_entities": [{ "name": string, "description": string, "attributes": string[] }],
+  "features": [{ "name": string, "description": string, "priority": "must"|"should"|"could" }],
+  "roles": [{ "name": string, "description": string, "permissions": string[] }],
+  "pages": string[],
+  "integrations": string[],
+  "assumptions": string[],
+  "clarifications_needed": string[],
+  "confidence": number
 }`;
 
 export async function extractIntent(
@@ -46,12 +41,12 @@ export async function extractIntent(
 
   const buildMessages = (feedback?: string) => {
     const msgs: Array<{ role: "system" | "user" | "assistant"; content: string }> = [
-      { role: "system", content: SYSTEM_PROMPT },
+      { role: "system", content: SYSTEM_PROMPT + JSON_REMINDER },
       { role: "user", content: `Parse this application description:\n\n"${userPrompt}"` },
     ];
     if (feedback && previousAttempt) {
       msgs.push({ role: "assistant", content: JSON.stringify(previousAttempt) });
-      msgs.push({ role: "user", content: `Fix these issues:\n${feedback}\n\nReturn complete corrected JSON.` });
+      msgs.push({ role: "user", content: `Fix these issues and return complete corrected JSON:\n${feedback}` });
       repairApplied = true;
     }
     return msgs;
@@ -65,7 +60,10 @@ export async function extractIntent(
         max_tokens: 2000,
       });
 
-      const raw = response.choices[0].message.content ?? "{}";
+      let raw = response.choices[0].message.content ?? "{}";
+      // Strip markdown code fences if Grok wraps in them
+      raw = raw.replace(/^```(?:json)?\n?/i, "").replace(/\n?```$/i, "").trim();
+
       const parsed = JSON.parse(raw);
       const result = IntentSchema.safeParse(parsed);
 
