@@ -14,6 +14,11 @@ import {
   type AppConfig, type PipelineResult, type StageResult
 } from "@/types";
 
+function isLLMError(error?: string) {
+  const message = error?.toLowerCase() ?? "";
+  return /api key|authentication|unauthorized|invalid key|missing api key|network|fetch|timeout|rate limit|429|quota|too many requests|failed to validate json/.test(message);
+}
+
 export async function runPipeline(userPrompt: string): Promise<PipelineResult> {
   const runId = uuidv4();
   const stages: StageResult<unknown>[] = [];
@@ -32,14 +37,15 @@ export async function runPipeline(userPrompt: string): Promise<PipelineResult> {
     // Bug fix: distinguish between an LLM/API failure and genuinely vague input.
     // Previously ANY Stage 1 failure returned failure_type:"vague_input",
     // so a missing API key showed "Input too vague" — completely wrong.
-    const isLLMError =
+    const isLLMStageError =
       intentResult.error?.toLowerCase().includes("api") ||
       intentResult.error?.toLowerCase().includes("auth") ||
       intentResult.error?.toLowerCase().includes("key") ||
       intentResult.error?.toLowerCase().includes("network") ||
       intentResult.error?.toLowerCase().includes("fetch") ||
       intentResult.error?.toLowerCase().includes("timeout") ||
-      intentResult.error?.toLowerCase().includes("max retries");
+      intentResult.error?.toLowerCase().includes("max retries") ||
+      isLLMError(intentResult.error);
 
     return {
       run_id: runId,
@@ -49,7 +55,7 @@ export async function runPipeline(userPrompt: string): Promise<PipelineResult> {
       total_tokens: totalTokens,
       total_latency_ms: Date.now() - pipelineStart,
       total_retries: totalRetries,
-      failure_type: isLLMError ? "llm_error" : "vague_input",
+      failure_type: isLLMStageError ? "llm_error" : "vague_input",
       assumptions_made: [],
       clarifications_needed: [],
     };
@@ -87,7 +93,7 @@ export async function runPipeline(userPrompt: string): Promise<PipelineResult> {
       total_tokens: totalTokens,
       total_latency_ms: Date.now() - pipelineStart,
       total_retries: totalRetries,
-      failure_type: "schema_violation",
+      failure_type: isLLMError(archResult.error) ? "llm_error" : "schema_violation",
       assumptions_made: intent.assumptions,
       clarifications_needed: intent.clarifications_needed,
     };
@@ -103,6 +109,7 @@ export async function runPipeline(userPrompt: string): Promise<PipelineResult> {
   totalRetries += dbResult.retries + apiResult.retries + uiResult.retries + authResult.retries;
 
   if (!dbResult.success || !apiResult.success || !uiResult.success || !authResult.success) {
+    const failedSchemaStage = [dbResult, apiResult, uiResult, authResult].find(stage => !stage.success);
     return {
       run_id: runId,
       success: false,
@@ -110,7 +117,7 @@ export async function runPipeline(userPrompt: string): Promise<PipelineResult> {
       total_tokens: totalTokens,
       total_latency_ms: Date.now() - pipelineStart,
       total_retries: totalRetries,
-      failure_type: "schema_violation",
+      failure_type: isLLMError(failedSchemaStage?.error) ? "llm_error" : "schema_violation",
       assumptions_made: intent.assumptions,
       clarifications_needed: intent.clarifications_needed,
     };

@@ -44,8 +44,10 @@ export async function extractIntent(
       { role: "system", content: SYSTEM_PROMPT + JSON_REMINDER },
       { role: "user", content: `Parse this application description:\n\n"${userPrompt}"` },
     ];
-    if (feedback && previousAttempt) {
-      msgs.push({ role: "assistant", content: JSON.stringify(previousAttempt) });
+    if (feedback) {
+      if (previousAttempt) {
+        msgs.push({ role: "assistant", content: JSON.stringify(previousAttempt) });
+      }
       msgs.push({ role: "user", content: `Fix these issues and return complete corrected JSON:\n${feedback}` });
       repairApplied = true;
     }
@@ -57,7 +59,7 @@ export async function extractIntent(
       const response = await llm.chat.completions.create({
         ...BASE_OPTIONS,
         messages: buildMessages(repairFeedback),
-        max_tokens: 2000,
+        max_tokens: 1200,
       });
 
       let raw = response.choices[0].message.content ?? "{}";

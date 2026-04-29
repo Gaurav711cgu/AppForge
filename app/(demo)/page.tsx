@@ -137,11 +137,15 @@ export default function AppForgePage() {
     updateStage("intent_extraction", { status: "running" });
 
     try {
+      const controller = new AbortController();
+      const timeout = window.setTimeout(() => controller.abort(), 120000);
       const res = await fetch("/api/pipeline", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ prompt }),
+        signal: controller.signal,
       });
+      window.clearTimeout(timeout);
       const data: PipelineResponse = await res.json();
 
       if (data.success && data.meta) {
@@ -175,11 +179,19 @@ export default function AppForgePage() {
 
       setResult(data);
       if (data.runtime?.files) setSelectedFile(Object.keys(data.runtime.files)[0] ?? null);
-    } catch {
+    } catch (err) {
+      const timedOut = err instanceof DOMException && err.name === "AbortError";
       setStages(prev => prev.map(s =>
         s.status === "running" ? { ...s, status: "failed" } : s
       ));
-      setResult({ success: false, run_id: "", failure_type: "api_error", message: "Network error — check your connection and try again." });
+      setResult({
+        success: false,
+        run_id: "",
+        failure_type: "api_error",
+        message: timedOut
+          ? "The pipeline request timed out after 120 seconds. Check the server logs or try a shorter prompt."
+          : "Network error — check your connection and try again.",
+      });
     } finally {
       setRunning(false);
     }
@@ -205,7 +217,7 @@ export default function AppForgePage() {
         color: "#f87171",
         title: "LLM / API Error",
         body: data.message ?? data.error ?? "The AI model could not be reached.",
-        hint: "Check that XAI_API_KEY (or OPENAI_API_KEY) is set correctly in your .env.local file.",
+        hint: "Check LLM_PROVIDER and the matching API key: GROQ_API_KEY for groq, XAI_API_KEY for grok, or OPENAI_API_KEY for openai.",
       };
     }
     if (data.failure_type === "vague_input") {
@@ -330,7 +342,15 @@ export default function AppForgePage() {
 
         {/* RIGHT */}
         <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
-          {!result ? (
+          {!result && running ? (
+            <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", color: "#475569" }}>
+              <div style={{ fontSize: 44, marginBottom: 14 }}>⚡</div>
+              <div style={{ fontSize: 15, fontWeight: 600, marginBottom: 8, color: "#60a5fa" }}>Compiling application</div>
+              <div style={{ fontSize: 12, textAlign: "center", maxWidth: 420, lineHeight: 1.7, color: "#64748b" }}>
+                Stage 1 is contacting the configured LLM provider. This can take a moment on free Groq capacity.
+              </div>
+            </div>
+          ) : !result ? (
             <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", color: "#334155" }}>
               <div style={{ fontSize: 44, marginBottom: 14 }}>⚡</div>
               <div style={{ fontSize: 15, fontWeight: 600, marginBottom: 8, color: "#475569" }}>Ready to compile</div>

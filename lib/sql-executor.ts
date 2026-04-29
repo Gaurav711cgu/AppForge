@@ -22,6 +22,7 @@ function adaptSQLToSQLite(sql: string): string {
     .replace(/\bTIMESTAMPTZ\b/gi, "TEXT")
     .replace(/gen_random_uuid\(\)/gi, "lower(hex(randomblob(16)))")
     .replace(/\bNOW\(\)/gi, "datetime('now')")
+    .replace(/DEFAULT\s+datetime\('now'\)/gi, "DEFAULT (datetime('now'))")
     .replace(/\bSERIAL\b/gi, "INTEGER")
     .replace(/\bBIGSERIAL\b/gi, "INTEGER")
     .replace(/\bVARCHAR\s*\(\d+\)/gi, "TEXT")
@@ -86,7 +87,7 @@ function buildTestInsert(schema: DBSchema): { sql: string; table: string } | nul
   if (candidates.length === 0) return null;
   const table = candidates[0];
 
-  const insertCols = table.columns.filter(c => !c.primary_key && !c.default);
+  const insertCols = table.columns.filter(c => !c.default && !c.references);
 
   if (insertCols.length === 0) {
     return { sql: `INSERT INTO ${table.name} DEFAULT VALUES`, table: table.name };
@@ -96,6 +97,7 @@ function buildTestInsert(schema: DBSchema): { sql: string; table: string } | nul
 
   const vals = insertCols.map(c => {
     const t = c.sql_type.toLowerCase();
+    if (t.includes("uuid")) return "'00000000-0000-4000-8000-000000000000'";
     if (t.includes("int") || t.includes("bool") || t === "integer") return "0";
     if (t.includes("text") || t.includes("varchar") || t.includes("char")) return `'test_value'`;
     if (t.includes("date") || t.includes("time")) return `datetime('now')`;

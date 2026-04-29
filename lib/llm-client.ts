@@ -8,7 +8,7 @@ const PROVIDERS = {
     apiKey: process.env.GROQ_API_KEY,
     model: "openai/gpt-oss-20b",
     model_fast: "openai/gpt-oss-20b",
-    supports_json_mode: true,
+    supports_json_mode: false,
     envVar: "GROQ_API_KEY",
   },
   grok: {

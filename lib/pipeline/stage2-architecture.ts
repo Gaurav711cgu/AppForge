@@ -3,7 +3,7 @@
 // ================================================================
 
 import { ArchitectureSchema, type Architecture, type Intent, type StageResult } from "@/types";
-import { llm, BASE_OPTIONS, FAST_OPTIONS, JSON_REMINDER } from "@/lib/llm-client";
+import { llm, BASE_OPTIONS, JSON_REMINDER } from "@/lib/llm-client";
 
 const SYSTEM_PROMPT = `You are the SYSTEM DESIGN stage of an AI application compiler.
 
@@ -17,6 +17,7 @@ Rules:
 - Include soft-deletes (deleted_at) on all major entities
 - Always include: id (uuid), created_at, updated_at on every model
 - Relations must be bidirectional
+- Relation type MUST be only one_to_one, one_to_many, or many_to_many. Do not output many_to_one.
 
 Output ONLY valid JSON matching this schema:
 {
@@ -72,8 +73,10 @@ export async function generateArchitecture(
       { role: "system", content: SYSTEM_PROMPT + JSON_REMINDER },
       { role: "user", content: `Design the architecture for:\n\n${JSON.stringify(intent, null, 2)}` },
     ];
-    if (feedback && previousAttempt) {
-      msgs.push({ role: "assistant", content: JSON.stringify(previousAttempt) });
+    if (feedback) {
+      if (previousAttempt) {
+        msgs.push({ role: "assistant", content: JSON.stringify(previousAttempt) });
+      }
       msgs.push({ role: "user", content: `Fix these issues:\n${feedback}\nReturn complete corrected JSON.` });
       repairApplied = true;
     }
@@ -85,7 +88,7 @@ export async function generateArchitecture(
       const response = await llm.chat.completions.create({
         ...BASE_OPTIONS,
         messages: buildMessages(repairFeedback),
-        max_tokens: 3500,
+        max_tokens: 2600,
       });
 
       let raw = response.choices[0].message.content ?? "{}";
@@ -137,7 +140,9 @@ export async function generateArchitecture(
   return {
     stage: "system_design",
     success: false,
-    error: "Could not generate valid architecture after 3 attempts",
+    error: repairFeedback
+      ? `Could not generate valid architecture after 3 attempts: ${repairFeedback}`
+      : "Could not generate valid architecture after 3 attempts",
     tokens_used: 0,
     latency_ms: Date.now() - start,
     retries,
