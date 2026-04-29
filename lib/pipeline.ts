@@ -29,14 +29,27 @@ export async function runPipeline(userPrompt: string): Promise<PipelineResult> {
   totalRetries += intentResult.retries;
 
   if (!intentResult.success || !intentResult.data) {
+    // Bug fix: distinguish between an LLM/API failure and genuinely vague input.
+    // Previously ANY Stage 1 failure returned failure_type:"vague_input",
+    // so a missing API key showed "Input too vague" — completely wrong.
+    const isLLMError =
+      intentResult.error?.toLowerCase().includes("api") ||
+      intentResult.error?.toLowerCase().includes("auth") ||
+      intentResult.error?.toLowerCase().includes("key") ||
+      intentResult.error?.toLowerCase().includes("network") ||
+      intentResult.error?.toLowerCase().includes("fetch") ||
+      intentResult.error?.toLowerCase().includes("timeout") ||
+      intentResult.error?.toLowerCase().includes("max retries");
+
     return {
       run_id: runId,
       success: false,
+      // Bug fix: include stages so the frontend can mark Stage 1 as failed
       stages,
       total_tokens: totalTokens,
       total_latency_ms: Date.now() - pipelineStart,
       total_retries: totalRetries,
-      failure_type: "vague_input",
+      failure_type: isLLMError ? "llm_error" : "vague_input",
       assumptions_made: [],
       clarifications_needed: [],
     };
@@ -44,7 +57,7 @@ export async function runPipeline(userPrompt: string): Promise<PipelineResult> {
 
   const intent = intentResult.data;
 
-  // Detect vague input early
+  // Detect vague input: only flag if confidence AND clarifications both say so
   if (intent.confidence < 0.25 && intent.clarifications_needed.length > 5) {
     return {
       run_id: runId,
@@ -149,7 +162,6 @@ export async function runPipeline(userPrompt: string): Promise<PipelineResult> {
     consistency_report: consistencyReport,
   };
 
-  // Final Zod validation of entire AppConfig
   const finalResult = AppConfigSchema.safeParse(rawConfig);
 
   if (!finalResult.success) {
