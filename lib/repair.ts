@@ -7,7 +7,7 @@ import {
   type DBSchema, type APISchema, type UISchema, type AuthSchema,
   type ValidationIssue,
 } from "@/types";
-import { llm, FAST_OPTIONS } from "@/lib/llm-client";
+import { llm, BASE_OPTIONS, FAST_OPTIONS, JSON_REMINDER } from "@/lib/llm-client";
 
 async function repairLayer<T>(
   layer: "db" | "api" | "ui" | "auth",
@@ -41,7 +41,8 @@ Return the complete corrected schema. Output ONLY valid JSON.`,
       max_tokens: 4000,
     });
 
-    const parsed = JSON.parse(response.choices[0].message.content ?? "{}");
+    const rawRepair = (response.choices[0].message.content ?? "{}").replace(/^```(?:json)?\n?/i, "").replace(/\n?```$/i, "").trim();
+    const parsed = JSON.parse(rawRepair);
     const result = (schemaValidators[layer] as typeof DBSchemaSchema).safeParse(parsed);
     if (result.success) return result.data as T;
   } catch { /* repair failed — return original */ }
