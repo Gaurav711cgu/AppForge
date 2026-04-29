@@ -3,7 +3,7 @@
 // ================================================================
 
 import { ArchitectureSchema, type Architecture, type Intent, type StageResult } from "@/types";
-import { llm, BASE_OPTIONS } from "@/lib/llm-client";
+import { llm, BASE_OPTIONS, FAST_OPTIONS, JSON_REMINDER } from "@/lib/llm-client";
 
 const SYSTEM_PROMPT = `You are the SYSTEM DESIGN stage of an AI application compiler.
 
@@ -69,7 +69,7 @@ export async function generateArchitecture(
 
   const buildMessages = (feedback?: string) => {
     const msgs: Array<{ role: "system" | "user" | "assistant"; content: string }> = [
-      { role: "system", content: SYSTEM_PROMPT },
+      { role: "system", content: SYSTEM_PROMPT + JSON_REMINDER },
       { role: "user", content: `Design the architecture for:\n\n${JSON.stringify(intent, null, 2)}` },
     ];
     if (feedback && previousAttempt) {
@@ -88,7 +88,8 @@ export async function generateArchitecture(
         max_tokens: 3500,
       });
 
-      const raw = response.choices[0].message.content ?? "{}";
+      let raw = response.choices[0].message.content ?? "{}";
+      raw = raw.replace(/^```(?:json)?\n?/i, "").replace(/\n?```$/i, "").trim();
       const parsed = JSON.parse(raw);
       const result = ArchitectureSchema.safeParse(parsed);
 
