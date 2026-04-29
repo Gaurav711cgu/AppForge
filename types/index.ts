@@ -277,7 +277,7 @@ export interface PipelineResult {
   total_tokens: number;
   total_latency_ms: number;
   total_retries: number;
-  failure_type?: "vague_input" | "conflicting_requirements" | "schema_violation" | "repair_failed" | "api_error";
+  failure_type?: "vague_input" | "conflicting_requirements" | "schema_violation" | "repair_failed" | "api_error" | "llm_error";
   assumptions_made: string[];
   clarifications_needed: string[];
 }

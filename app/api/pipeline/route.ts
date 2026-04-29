@@ -3,6 +3,9 @@ import { runPipeline } from "@/lib/pipeline";
 import { generateRuntimeCode } from "@/lib/runtime";
 import { executeGeneratedSQL, validateTypeScriptOutput } from "@/lib/sql-executor";
 
+export const runtime = "nodejs";
+export const maxDuration = 60;
+
 // Inlined here to avoid export resolution issues with template-string exports in runtime.ts
 function validateGeneratedCode(files: Record<string, string>): { valid: boolean; errors: string[] } {
   const errors: string[] = [];
@@ -29,34 +32,53 @@ export async function POST(req: NextRequest) {
 
     if (prompt.trim().length < 5) {
       return NextResponse.json({
+        success: false,
+        run_id: "",
+        failure_type: "vague_input",
+        message: "Prompt too short.",
         error: "Prompt too short.",
-        code: "PROMPT_TOO_SHORT",
         clarifications_needed: [
           "What is the main purpose of this application?",
           "Who are the users and what can they do?",
           "What are the main features you need?",
         ],
+        assumptions_made: [],
+        stages: [],
       }, { status: 422 });
     }
 
     const result = await runPipeline(prompt);
 
     if (!result.success || !result.final_config) {
+      const pipelineStages = result.stages.map(s => ({
+        stage: s.stage,
+        success: s.success,
+        error: s.error,
+        latency_ms: s.latency_ms,
+        tokens_used: s.tokens_used,
+        retries: s.retries,
+        repair_applied: s.repair_applied,
+      }));
+
       if (result.failure_type === "vague_input") {
         return NextResponse.json({
           success: false,
+          run_id: result.run_id,
           failure_type: "vague_input",
           message: "Input too vague to generate a complete app config.",
           assumptions_made: result.assumptions_made,
           clarifications_needed: result.clarifications_needed,
-          pipeline_stages: result.stages.map(s => ({ stage: s.stage, success: s.success, latency_ms: s.latency_ms })),
+          stages: pipelineStages,
         }, { status: 422 });
       }
       return NextResponse.json({
         success: false,
+        run_id: result.run_id,
         failure_type: result.failure_type ?? "unknown",
-        message: "Pipeline failed.",
-        stages: result.stages.map(s => ({ stage: s.stage, success: s.success, error: s.error, latency_ms: s.latency_ms, retries: s.retries })),
+        message: result.stages.find(s => !s.success)?.error ?? "Pipeline failed.",
+        assumptions_made: result.assumptions_made,
+        clarifications_needed: result.clarifications_needed,
+        stages: pipelineStages,
       }, { status: 500 });
     }
 
@@ -109,6 +131,15 @@ export async function POST(req: NextRequest) {
 
   } catch (err) {
     console.error("Pipeline error:", err);
-    return NextResponse.json({ success: false, failure_type: "api_error", error: err instanceof Error ? err.message : "Internal server error" }, { status: 500 });
+    const message = err instanceof Error ? err.message : "Internal server error";
+    const isLLMError = /api key|auth|unauthorized|groq_api_key|xai_api_key|openai_api_key/i.test(message);
+    return NextResponse.json({
+      success: false,
+      run_id: "",
+      failure_type: isLLMError ? "llm_error" : "api_error",
+      message,
+      error: message,
+      stages: [],
+    }, { status: 500 });
   }
 }

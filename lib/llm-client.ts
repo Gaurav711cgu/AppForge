@@ -1,14 +1,23 @@
 import OpenAI from "openai";
 
-const PROVIDER = process.env.LLM_PROVIDER ?? "grok";
+const PROVIDER = process.env.LLM_PROVIDER ?? "groq";
 
 const PROVIDERS = {
+  groq: {
+    baseURL: "https://api.groq.com/openai/v1",
+    apiKey: process.env.GROQ_API_KEY,
+    model: "openai/gpt-oss-20b",
+    model_fast: "openai/gpt-oss-20b",
+    supports_json_mode: true,
+    envVar: "GROQ_API_KEY",
+  },
   grok: {
     baseURL: "https://api.x.ai/v1",
     apiKey: process.env.XAI_API_KEY,
     model: "grok-3",
     model_fast: "grok-3",
     supports_json_mode: false,
+    envVar: "XAI_API_KEY",
   },
   openai: {
     baseURL: undefined,
@@ -16,25 +25,33 @@ const PROVIDERS = {
     model: "gpt-4o",
     model_fast: "gpt-4o-mini",
     supports_json_mode: true,
+    envVar: "OPENAI_API_KEY",
   },
 } as const;
 
-const cfg = PROVIDERS[PROVIDER as keyof typeof PROVIDERS] ?? PROVIDERS.grok;
+const cfg = PROVIDERS[PROVIDER as keyof typeof PROVIDERS];
+const providerConfigError = !cfg
+  ? new Error(`Unsupported LLM_PROVIDER "${PROVIDER}". Use one of: groq, grok, openai.`)
+  : null;
+const missingApiKeyError = cfg && !cfg.apiKey
+  ? new Error(`Missing API key: set ${cfg.envVar} in your environment variables`)
+  : null;
+const llmConfigError = providerConfigError ?? missingApiKeyError;
 
-// Bug fix: validate API key at startup so failures show a clear error
-// instead of a cryptic auth exception that gets misclassified as "vague_input"
-if (!cfg.apiKey) {
-  const envVar = PROVIDER === "openai" ? "OPENAI_API_KEY" : "XAI_API_KEY";
-  throw new Error(
-    `Missing API key: ${envVar} is not set. ` +
-    `Copy .env.example to .env.local and add your ${envVar}.`
-  );
+export function assertLLMConfigured() {
+  if (llmConfigError) throw llmConfigError;
 }
 
-export const llm = new OpenAI({
-  apiKey: cfg.apiKey,
-  baseURL: cfg.baseURL,
-});
+export const llm = llmConfigError
+  ? new Proxy({} as OpenAI, {
+      get() {
+        throw llmConfigError;
+      },
+    })
+  : new OpenAI({
+      apiKey: cfg.apiKey,
+      baseURL: cfg.baseURL,
+    });
 
 export const LLM_MODEL = cfg.model;
 export const LLM_MODEL_FAST = cfg.model_fast;

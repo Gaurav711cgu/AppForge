@@ -10,6 +10,10 @@ interface Stage {
   latency_ms?: number; tokens_used?: number; retries?: number; repair_applied?: boolean;
 }
 
+interface PipelineStageMeta {
+  stage: string; success: boolean; latency_ms: number; tokens_used: number; retries: number; repair_applied?: boolean; error?: string;
+}
+
 interface SQLProof {
   executed: boolean; engine: string; success: boolean;
   tables_created: string[]; tables_failed: { table: string; error: string }[];
@@ -25,7 +29,7 @@ interface PipelineResponse {
   meta?: {
     total_tokens: number; total_latency_ms: number; total_retries: number;
     assumptions_made: string[]; clarifications_needed: string[];
-    pipeline_stages: Array<{ stage: string; success: boolean; latency_ms: number; tokens_used: number; retries: number; repair_applied: boolean }>;
+    pipeline_stages: PipelineStageMeta[];
     consistency_report: { issues_found: number; issues_resolved: number; warnings: string[]; cross_layer_checks: Array<{ check: string; passed: boolean; detail?: string }> };
   };
   // Failure fields
@@ -35,7 +39,7 @@ interface PipelineResponse {
   message?: string;
   error?: string;
   // Failure includes stages so we can update UI accurately
-  stages?: Array<{ stage: string; success: boolean; latency_ms: number; tokens_used: number; retries: number; repair_applied?: boolean; error?: string }>;
+  stages?: PipelineStageMeta[];
 }
 
 const INITIAL_STAGES: Stage[] = [
@@ -87,7 +91,7 @@ export default function AppForgePage() {
   // merging metadata from multiple sub-stages (e.g. all 4 schema stages)
   // into the single "schema_generation" UI row.
   function applyStagesFromResponse(
-    rawStages: PipelineResponse["meta"]["pipeline_stages"]
+    rawStages: PipelineStageMeta[]
   ) {
     // Accumulate per UI-stage: any failure = failed, merge tokens/retries
     const accumulated: Record<string, {
