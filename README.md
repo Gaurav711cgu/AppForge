@@ -1,74 +1,95 @@
 AppForge — AI Application Compiler
-
-AppForge is a compiler-style AI system that converts natural language into validated, executable, and production-ready application blueprints. Unlike typical AI generators, it follows a structured pipeline inspired by compiler design to ensure consistency, correctness, and real execution.
-
+<p align="center"> <b>Convert natural language into validated, executable application systems</b> </p> <p align="center"> <img src="https://img.shields.io/badge/Architecture-Compiler--Style-black" /> <img src="https://img.shields.io/badge/Validation-Zod-blue" /> <img src="https://img.shields.io/badge/Runtime-SQLite-green" /> <img src="https://img.shields.io/badge/Language-TypeScript-blue" /> <img src="https://img.shields.io/badge/Framework-Next.js-black" /> </p>
 Overview
 
-Most AI-based app generators produce outputs that appear correct but fail when used in real scenarios. They lack validation, consistency across components, and any form of execution guarantee.
+AppForge is a compiler-inspired AI system that transforms natural language into structured, validated, and executable full-stack application blueprints.
 
-AppForge addresses these limitations by introducing a multi-stage pipeline that validates, refines, and executes outputs. It transforms plain English ideas into structured system designs that are not only logically sound but also runnable.
+Unlike typical AI tools, it does not stop at generation. It validates outputs, enforces consistency across layers, repairs errors, and executes the result to ensure correctness.
 
-How It Works
+Live Demo
 
-AppForge follows a compiler-like architecture:
+Add your deployed link here:
 
-Stage 1: Intent Extraction
-The system analyzes the input prompt to identify entities, features, and requirements. A confidence score is used to reject weak or ambiguous inputs early.
+https://your-demo-link.vercel.app
+System Architecture
 
-Stage 2: System Design
-Generates a structured architecture including data models, workflows, authentication logic, and business rules.
+Add diagram here (very important for impact):
 
-Stage 3: Schema Generation
-Produces database schemas, API routes, and UI structure. All outputs are validated using strict schema definitions.
+[ User Prompt ]
+       ↓
+[ Intent Extraction ]
+       ↓
+[ System Design ]
+       ↓
+[ Schema Generation ]
+       ↓
+[ Validation & Repair ]
+       ↓
+[ Execution Proof ]
 
-Stage 4: Refinement and Repair
-Applies cross-layer consistency checks and automatically fixes mismatches between components.
+You can later replace this with a proper diagram image.
 
-Execution Layer
-Transforms generated schemas into SQL and executes them in SQLite to verify correctness.
-
-Key Features
-
-Multi-stage AI pipeline inspired by compiler design
-Strict schema validation at every stage
-Cross-layer consistency enforcement
+Key Capabilities
+Multi-stage AI pipeline based on compiler architecture
+Strong schema validation using Zod
+Cross-layer consistency checks
 Automatic error detection and repair
 Deterministic outputs for reproducibility
-Runtime execution proof using SQLite
+Runtime execution using SQLite
 Production-ready structured outputs
+Pipeline Breakdown
+1. Intent Extraction
 
-Execution Proof
+Parses user input to identify entities, roles, and features with confidence scoring.
 
-A key differentiator of AppForge is that it does not stop at generation.
+2. System Design
 
-It converts generated schemas into SQL and executes them in a real environment. The system then returns a result indicating whether the output is valid and runnable.
+Generates architecture including data models, workflows, and authentication.
 
-This ensures that outputs are not just theoretically correct, but practically executable.
+3. Schema Generation
 
+Produces database schema, API routes, and UI structure with strict validation.
+
+4. Validation and Repair
+
+Ensures consistency across components and fixes mismatches automatically.
+
+5. Execution Proof
+
+Runs generated SQL in SQLite to verify correctness.
+
+Execution Proof Example
+{
+  "execution_proof": {
+    "tables_created": true,
+    "queries_executed": true
+  }
+}
 Tech Stack
-
-Frontend: Next.js, React, Tailwind CSS
-Backend: Next.js API Routes
-Language: TypeScript
-Validation: Zod
-Database: SQLite (in-memory execution)
-AI: Structured JSON generation using LLMs
-
+Layer	Technology
+Frontend	Next.js, React
+Backend	Next.js API Routes
+Language	TypeScript
+Validation	Zod
+Database	SQLite
+AI Layer	Structured LLM outputs
 Project Structure
+app/
+  api/
+    pipeline/
+    evaluate/
 
-app/api/pipeline — Core pipeline logic
-app/api/evaluate — Evaluation and validation system
-lib/pipeline.ts — Pipeline orchestration
-lib/evaluator.ts — Validation and scoring
-config — Schema definitions
-data — Evaluation datasets and scripts
+lib/
+  pipeline.ts
+  evaluator.ts
 
+config/
+data/
 Getting Started
 
 Clone the repository:
 
 git clone https://github.com/your-username/appforge.git
-
 cd appforge
 
 Install dependencies:
@@ -79,61 +100,40 @@ Set up environment variables:
 
 cp .env.example .env
 
-Run the development server:
+Run locally:
 
 npm run dev
-
-Application will run at:
-
-http://localhost:3000
-
-Example Use Case
-
-Input:
-
+Example Input
 Build a task management app with users, roles, deadlines, and notifications
-
-Output includes:
-
-Structured data models
-API definitions
-Authentication strategy
-UI architecture
-SQL execution proof
-
+Output Includes
+Data models
+API endpoints
+Authentication logic
+UI structure
+Execution proof
 Evaluation System
 
-AppForge includes an internal evaluation system that verifies:
+The system validates:
 
 Schema correctness
-Structural completeness
-Cross-component consistency
+Structural integrity
+Cross-layer consistency
 Execution success
-
-Why AppForge Stands Out
-
-AppForge introduces a system-level approach to AI application generation:
-
-It treats natural language as source code
-Applies compiler principles to AI workflows
-Validates outputs at every stage
+Why This Project Stands Out
+Treats AI generation as a compiler problem
+Enforces validation instead of relying on trust
 Repairs inconsistencies automatically
-Provides execution proof instead of assumptions
-
-This makes it significantly more reliable than traditional AI-based generators.
-
-Future Improvements
-
-Support for PostgreSQL and MongoDB
+Provides execution proof rather than assumptions
+Roadmap
+PostgreSQL and MongoDB support
 Full-stack code generation
 CI/CD pipeline generation
 Multi-agent architecture
 Deployment validation
-
 Author
 
 Gaurav Kumar Nayak
-BTech CSE — AI Systems and Full Stack Development
+BTech CSE — AI Systems and Full Stack Engineering
 
 License
 
