@@ -1,79 +1,96 @@
-AppForge — AI Application Compiler
-<p align="center"> <b>Convert natural language into validated, executable application systems</b> </p> <p align="center"> <img src="https://img.shields.io/badge/Architecture-Compiler--Style-black" /> <img src="https://img.shields.io/badge/Validation-Zod-blue" /> <img src="https://img.shields.io/badge/Runtime-SQLite-green" /> <img src="https://img.shields.io/badge/Language-TypeScript-blue" /> <img src="https://img.shields.io/badge/Framework-Next.js-black" /> </p>
-Overview
+● AppForge — AI Application Compiler
 
-AppForge is a compiler-inspired AI system that transforms natural language into structured, validated, and executable full-stack application blueprints.
+Convert natural language into validated, executable, production-ready application systems
 
-Unlike typical AI tools, it does not stop at generation. It validates outputs, enforces consistency across layers, repairs errors, and executes the result to ensure correctness.
+AppForge is a compiler-style AI system that transforms plain English ideas into structured full-stack application blueprints with validation, consistency checks, and execution proof.
 
-Live Demo
+● Overview
 
-Add your deployed link here:
+Most AI app generators:
 
-https://your-demo-link.vercel.app
-System Architecture
+produce inconsistent outputs
+lack validation
+cannot guarantee execution
 
-Add diagram here (very important for impact):
+AppForge introduces a compiler-inspired pipeline that ensures outputs are:
 
-[ User Prompt ]
-       ↓
-[ Intent Extraction ]
-       ↓
-[ System Design ]
-       ↓
-[ Schema Generation ]
-       ↓
-[ Validation & Repair ]
-       ↓
-[ Execution Proof ]
+structured
+validated
+consistent
+executable
 
-You can later replace this with a proper diagram image.
+This makes it a system-level solution, not just a generation tool.
 
-Key Capabilities
-Multi-stage AI pipeline based on compiler architecture
-Strong schema validation using Zod
-Cross-layer consistency checks
-Automatic error detection and repair
-Deterministic outputs for reproducibility
-Runtime execution using SQLite
-Production-ready structured outputs
-Pipeline Breakdown
-1. Intent Extraction
+● Core Concept
 
-Parses user input to identify entities, roles, and features with confidence scoring.
+AppForge treats:
 
-2. System Design
+natural language → as source code
+AI pipeline → as compiler stages
+output → as executable system
+● Pipeline Architecture
+User Prompt
+   ↓
+Intent Extraction
+   ↓
+System Design
+   ↓
+Schema Generation
+   ↓
+Validation & Repair
+   ↓
+Execution Proof (SQLite)
 
-Generates architecture including data models, workflows, and authentication.
+Each stage validates its output before moving forward.
 
-3. Schema Generation
-
-Produces database schema, API routes, and UI structure with strict validation.
-
-4. Validation and Repair
-
-Ensures consistency across components and fixes mismatches automatically.
-
-5. Execution Proof
-
-Runs generated SQL in SQLite to verify correctness.
-
-Execution Proof Example
+● System Workflow
+● Intent Extraction
+extracts entities, roles, features
+assigns confidence score
+rejects weak inputs
+● System Design
+defines data models
+builds workflows
+sets authentication logic
+● Schema Generation
+creates database schema
+generates API routes
+defines UI structure
+enforces strict validation
+● Validation & Repair
+checks cross-layer consistency
+detects mismatches
+automatically fixes errors
+● Execution Proof
+converts schema to SQL
+executes using SQLite
+returns execution result
+● Execution Proof Example
 {
   "execution_proof": {
     "tables_created": true,
     "queries_executed": true
   }
 }
-Tech Stack
-Layer	Technology
-Frontend	Next.js, React
-Backend	Next.js API Routes
-Language	TypeScript
-Validation	Zod
-Database	SQLite
-AI Layer	Structured LLM outputs
-Project Structure
+
+Outputs are not just generated — they are runnable.
+
+● Key Features
+● Multi-stage AI pipeline
+● Schema validation at every stage
+● Cross-layer consistency checks
+● Automatic error repair
+● Deterministic outputs
+● SQLite execution proof
+● Production-ready outputs
+● Tech Stack
+● Frontend: Next.js, React, Tailwind CSS
+● Backend: Next.js API Routes
+● Language: TypeScript
+● Validation: Zod
+● Database: SQLite
+● AI: Structured LLM outputs
+● Project Structure
 app/
   api/
     pipeline/
@@ -85,56 +102,48 @@ lib/
 
 config/
 data/
-Getting Started
-
-Clone the repository:
-
+● Getting Started
+● Clone Repository
 git clone https://github.com/your-username/appforge.git
 cd appforge
-
-Install dependencies:
-
+● Install Dependencies
 npm install
-
-Set up environment variables:
-
+● Setup Environment
 cp .env.example .env
-
-Run locally:
-
+● Run Locally
 npm run dev
-Example Input
+● Example Input
 Build a task management app with users, roles, deadlines, and notifications
-Output Includes
-Data models
-API endpoints
-Authentication logic
-UI structure
-Execution proof
-Evaluation System
+● Output Includes
+● Data models
+● API endpoints
+● Authentication logic
+● UI structure
+● Execution proof
+● Evaluation System
 
-The system validates:
+AppForge verifies:
 
-Schema correctness
-Structural integrity
-Cross-layer consistency
-Execution success
-Why This Project Stands Out
-Treats AI generation as a compiler problem
-Enforces validation instead of relying on trust
-Repairs inconsistencies automatically
-Provides execution proof rather than assumptions
-Roadmap
-PostgreSQL and MongoDB support
-Full-stack code generation
-CI/CD pipeline generation
-Multi-agent architecture
-Deployment validation
-Author
+● Schema correctness
+● Structural completeness
+● Cross-layer consistency
+● Execution success
+● Why This Project Stands Out
+● Not a prompt wrapper — structured pipeline
+● Not just generation — validation + repair
+● Not theoretical — execution proof
+● Not random — deterministic outputs
+● Future Improvements
+● PostgreSQL and MongoDB support
+● Full-stack code generation
+● CI/CD pipeline generation
+● Multi-agent architecture
+● Deployment validation
+● Author
 
 Gaurav Kumar Nayak
-BTech CSE — AI Systems and Full Stack Engineering
+BTech CSE — AI Systems and Full Stack Development
 
-License
+● License
 
 MIT License
