@@ -1,199 +1,140 @@
-GitHub Description (paste in repo settings)
+AppForge — AI Application Compiler
 
-AI-powered compiler that converts natural language into validated, executable full-stack app configs. Features multi-stage LLM pipeline, Zod validation, cross-layer checks, auto-repair, and SQLite execution proof.
+AppForge is a compiler-style AI system that converts natural language into validated, executable, and production-ready application blueprints. Unlike typical AI generators, it follows a structured pipeline inspired by compiler design to ensure consistency, correctness, and real execution.
 
-📄 FULL README.md (FINAL VERSION)
-# ⚡ AppForge — AI Application Compiler
+Overview
 
-> Turn natural language into validated, executable, production-ready app blueprints.
+Most AI-based app generators produce outputs that appear correct but fail when used in real scenarios. They lack validation, consistency across components, and any form of execution guarantee.
 
-AppForge is a **compiler-style AI system** that transforms plain English product ideas into structured, validated, and executable full-stack application configurations.
+AppForge addresses these limitations by introducing a multi-stage pipeline that validates, refines, and executes outputs. It transforms plain English ideas into structured system designs that are not only logically sound but also runnable.
 
-Unlike typical AI generators, AppForge enforces **strict validation, cross-layer consistency, and execution proof**, making outputs reliable and production-oriented.
+How It Works
 
----
+AppForge follows a compiler-like architecture:
 
-## 🔥 Why AppForge?
+Stage 1: Intent Extraction
+The system analyzes the input prompt to identify entities, features, and requirements. A confidence score is used to reject weak or ambiguous inputs early.
 
-Most AI tools:
-- Generate inconsistent outputs
-- Lack validation
-- Cannot prove execution
+Stage 2: System Design
+Generates a structured architecture including data models, workflows, authentication logic, and business rules.
 
-**AppForge solves this by behaving like a compiler.**
+Stage 3: Schema Generation
+Produces database schemas, API routes, and UI structure. All outputs are validated using strict schema definitions.
 
----
+Stage 4: Refinement and Repair
+Applies cross-layer consistency checks and automatically fixes mismatches between components.
 
-## 🧠 Compiler Analogy
-
-| Compiler Stage        | AppForge Equivalent              |
-|----------------------|---------------------------------|
-| Source Code          | Natural Language Prompt         |
-| Lexical Analysis     | Intent Extraction               |
-| Abstract Syntax Tree | System Design                   |
-| Code Generation      | Schema + API + UI               |
-| Linking              | Cross-layer Validation          |
-| Execution            | SQL Runtime Proof               |
-
----
-
-## ⚙️ Core Features
-
-- ⚡ Multi-stage LLM pipeline (4 stages)
-- 🧩 Zod schema validation at every stage
-- 🔍 Cross-layer consistency checks (7 rules)
-- 🛠️ Automatic error repair system
-- 🧪 SQLite execution proof (real runtime validation)
-- 🔁 Deterministic outputs (`temperature=0`, `seed=42`)
-- ⚡ Parallel + sequential pipeline optimization
-- 📦 Strongly typed, production-ready outputs
-
----
-
-## 🏗️ Architecture Overview
-
-
-User Prompt
-│
-▼
-Stage 1 — Intent Extraction
-
-Extract entities, roles, features
-Confidence scoring
-
-Fail-fast on low confidence
-
-▼
-Stage 2 — System Design
-
-Data models
-User flows
-Business logic
-
-Authentication strategy
-
-▼
-Stage 3 — Schema Generation
-
-Database schema
-API routes
-UI structure
-
-Fully validated with Zod
-
-▼
-Stage 4 — Refinement & Repair
-
-Cross-layer consistency checks
-Automatic fixes
-
-Re-validation
-
-▼
 Execution Layer
+Transforms generated schemas into SQL and executes them in SQLite to verify correctness.
 
-SQL generated & executed
-SQLite runtime proof returned
+Key Features
 
----
+Multi-stage AI pipeline inspired by compiler design
+Strict schema validation at every stage
+Cross-layer consistency enforcement
+Automatic error detection and repair
+Deterministic outputs for reproducibility
+Runtime execution proof using SQLite
+Production-ready structured outputs
 
-## 🧪 Execution Proof (Key Differentiator)
+Execution Proof
 
-AppForge doesn’t stop at generation.
+A key differentiator of AppForge is that it does not stop at generation.
 
-It:
-1. Converts schema → SQL  
-2. Executes SQL in SQLite  
-3. Returns execution status  
+It converts generated schemas into SQL and executes them in a real environment. The system then returns a result indicating whether the output is valid and runnable.
 
-Example:
+This ensures that outputs are not just theoretically correct, but practically executable.
 
-```json
-{
-  "execution_proof": {
-    "tables_created": true,
-    "queries_executed": true
-  }
-}
+Tech Stack
 
-This ensures outputs are not just valid—but runnable.
-
-📂 Project Structure
-app/
- ├── api/
- │   ├── evaluate/        # Evaluation pipeline
- │   ├── pipeline/        # Core compiler pipeline
- ├── (demo)/              # Demo UI
-
-lib/
- ├── pipeline.ts          # Pipeline orchestration
- ├── evaluator.ts         # Validation & scoring
-
-data/
- ├── mock-eval.js
- ├── run-eval.ts
-
-config/
- ├── schema definitions (Zod)
-🛠️ Tech Stack
-Frontend: Next.js, React, TailwindCSS
+Frontend: Next.js, React, Tailwind CSS
 Backend: Next.js API Routes
 Language: TypeScript
 Validation: Zod
-Database: SQLite (runtime execution)
-AI: Structured JSON outputs via LLM
-🚀 Getting Started
-1. Clone Repository
+Database: SQLite (in-memory execution)
+AI: Structured JSON generation using LLMs
+
+Project Structure
+
+app/api/pipeline — Core pipeline logic
+app/api/evaluate — Evaluation and validation system
+lib/pipeline.ts — Pipeline orchestration
+lib/evaluator.ts — Validation and scoring
+config — Schema definitions
+data — Evaluation datasets and scripts
+
+Getting Started
+
+Clone the repository:
+
 git clone https://github.com/your-username/appforge.git
+
 cd appforge
-2. Install Dependencies
+
+Install dependencies:
+
 npm install
-3. Setup Environment Variables
+
+Set up environment variables:
+
 cp .env.example .env
 
-Add your API key inside .env.
+Run the development server:
 
-4. Run the Project
 npm run dev
 
-App will start on:
+Application will run at:
 
 http://localhost:3000
-🧪 Example Input
-Build a task management app with roles, deadlines, and notifications
-📤 Example Output Includes
-Data Models
-API Endpoints
-Authentication Strategy
-UI Structure
-SQL Execution Proof
-📊 Evaluation System
 
-AppForge includes a built-in evaluator that checks:
+Example Use Case
+
+Input:
+
+Build a task management app with users, roles, deadlines, and notifications
+
+Output includes:
+
+Structured data models
+API definitions
+Authentication strategy
+UI architecture
+SQL execution proof
+
+Evaluation System
+
+AppForge includes an internal evaluation system that verifies:
 
 Schema correctness
-Structural integrity
-Cross-layer consistency
-Execution validity
-🎯 What Makes This Unique
-🔁 Treats AI as a compiler, not a chatbot
-🧪 Includes execution proof
-🛠️ Has auto-repair system
-🔍 Ensures cross-layer consistency
-📦 Produces production-ready structured outputs
-🧠 Future Roadmap
-PostgreSQL / MongoDB support
-Full code generation (frontend + backend)
+Structural completeness
+Cross-component consistency
+Execution success
+
+Why AppForge Stands Out
+
+AppForge introduces a system-level approach to AI application generation:
+
+It treats natural language as source code
+Applies compiler principles to AI workflows
+Validates outputs at every stage
+Repairs inconsistencies automatically
+Provides execution proof instead of assumptions
+
+This makes it significantly more reliable than traditional AI-based generators.
+
+Future Improvements
+
+Support for PostgreSQL and MongoDB
+Full-stack code generation
 CI/CD pipeline generation
 Multi-agent architecture
 Deployment validation
-👨‍💻 Author
+
+Author
 
 Gaurav Kumar Nayak
-BTech CSE | AI Systems | Full-Stack Engineering
+BTech CSE — AI Systems and Full Stack Development
 
-Focused on building real-world, production-grade AI systems.
-
-📄 License
+License
 
 MIT License
